@@ -8,6 +8,14 @@ export class DatabaseSchemaInitializer implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS fingerprints (
+        fingerprint TEXT PRIMARY KEY,
+        error_type TEXT NOT NULL,
+        first_seen_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `);
+
+    await this.pool.query(`
       CREATE TABLE IF NOT EXISTS raw_error_events (
         id BIGSERIAL PRIMARY KEY,
         error_type TEXT NOT NULL,
@@ -21,12 +29,11 @@ export class DatabaseSchemaInitializer implements OnModuleInit {
       )
     `);
 
+    // Nullable + added via ALTER rather than on CREATE TABLE: the table
+    // predates this column, and existing rows have no fingerprint to backfill.
     await this.pool.query(`
-      CREATE TABLE IF NOT EXISTS fingerprints (
-        fingerprint TEXT PRIMARY KEY,
-        error_type TEXT NOT NULL,
-        first_seen_at TIMESTAMPTZ NOT NULL DEFAULT now()
-      )
+      ALTER TABLE raw_error_events
+      ADD COLUMN IF NOT EXISTS fingerprint TEXT REFERENCES fingerprints (fingerprint)
     `);
 
     await this.pool.query(`

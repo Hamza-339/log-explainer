@@ -13,8 +13,8 @@ export class ExplainerService {
 
   async explainNewError(errorEvent: CreateErrorEventDto, fingerprint: string): Promise<void> {
     const { rows } = await this.pool.query(
-      'SELECT COUNT(*) FROM raw_error_events WHERE error_type = $1',
-      [errorEvent.errorType],
+      'SELECT COUNT(*) FROM raw_error_events WHERE fingerprint = $1',
+      [fingerprint],
     );
     const occurrenceCount = Number(rows[0].count);
 
