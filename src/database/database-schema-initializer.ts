@@ -28,5 +28,16 @@ export class DatabaseSchemaInitializer implements OnModuleInit {
         first_seen_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
+
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS explanations (
+        fingerprint TEXT PRIMARY KEY REFERENCES fingerprints (fingerprint),
+        summary TEXT NOT NULL,
+        root_cause TEXT NOT NULL,
+        suggested_fix TEXT NOT NULL,
+        severity TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `);
   }
 }
