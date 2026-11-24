@@ -16,11 +16,14 @@ export class IngestService {
   ) {}
 
   async persistErrorEvent(errorEvent: CreateErrorEventDto): Promise<void> {
+    const { fingerprint, isNew } = await this.fingerprintService.registerSighting(errorEvent);
+
     await this.pool.query(
       `INSERT INTO raw_error_events
-        (error_type, message, stack, service, environment, occurred_at, metadata)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        (fingerprint, error_type, message, stack, service, environment, occurred_at, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
+        fingerprint,
         errorEvent.errorType,
         errorEvent.message,
         errorEvent.stack ?? null,
@@ -30,8 +33,6 @@ export class IngestService {
         errorEvent.metadata ?? null,
       ],
     );
-
-    const { fingerprint, isNew } = await this.fingerprintService.registerSighting(errorEvent);
 
     if (isNew) {
       this.backgroundWork.run(() => this.explainerService.explainNewError(errorEvent, fingerprint));
