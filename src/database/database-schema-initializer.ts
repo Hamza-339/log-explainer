@@ -20,5 +20,13 @@ export class DatabaseSchemaInitializer implements OnModuleInit {
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `);
+
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS fingerprints (
+        fingerprint TEXT PRIMARY KEY,
+        error_type TEXT NOT NULL,
+        first_seen_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `);
   }
 }

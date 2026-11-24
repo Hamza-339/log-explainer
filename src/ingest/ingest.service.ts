@@ -1,11 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
 import { PG_POOL } from '../database/pg-pool.token';
+import { FingerprintService } from '../fingerprint/fingerprint.service';
 import { CreateErrorEventDto } from './create-error-event.dto';
 
 @Injectable()
 export class IngestService {
-  constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
+  constructor(
+    @Inject(PG_POOL) private readonly pool: Pool,
+    private readonly fingerprintService: FingerprintService,
+  ) {}
 
   async persistErrorEvent(errorEvent: CreateErrorEventDto): Promise<void> {
     await this.pool.query(
@@ -22,5 +26,7 @@ export class IngestService {
         errorEvent.metadata ?? null,
       ],
     );
+
+    await this.fingerprintService.registerSighting(errorEvent);
   }
 }
