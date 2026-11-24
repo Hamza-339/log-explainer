@@ -7,22 +7,48 @@ import { Pool } from 'pg';
 import { AppModule } from '../src/app.module';
 import { PG_POOL } from '../src/database/database.module';
 import { createValidationPipe } from '../src/validation-pipe';
+import {
+  ErrorExplanation,
+  EXPLAINER_LLM_CLIENT,
+  ExplainerLlmClient,
+  ExplainerLlmInput,
+} from '../src/explainer/explainer-llm-client.interface';
+import { BackgroundWorkService } from '../src/background/background-work.service';
 
 const uniqueErrorType = (base: string): string => `${base}_${randomUUID()}`;
+
+class FakeExplainerLlmClient implements ExplainerLlmClient {
+  readonly cannedExplanation: ErrorExplanation = {
+    summary: 'Canned summary',
+    rootCause: 'Canned root cause',
+    suggestedFix: 'Canned suggested fix',
+    severity: 'medium',
+  };
+
+  async explain(_input: ExplainerLlmInput): Promise<ErrorExplanation> {
+    return this.cannedExplanation;
+  }
+}
 
 describe('POST /ingest', () => {
   let app: INestApplication;
   let pool: Pool;
+  let backgroundWork: BackgroundWorkService;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
+      .overrideProvider(EXPLAINER_LLM_CLIENT)
+      .useValue(new FakeExplainerLlmClient())
+      .compile();
     app = moduleRef.createNestApplication();
     app.useGlobalPipes(createValidationPipe());
     await app.init();
     pool = app.get<Pool>(PG_POOL);
+    backgroundWork = app.get(BackgroundWorkService);
   });
 
   afterAll(async () => {
+    await backgroundWork.flush();
     await app.close();
   });
 
