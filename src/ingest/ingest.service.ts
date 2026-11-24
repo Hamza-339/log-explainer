@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Pool } from 'pg';
+import { BackgroundWorkService } from '../background/background-work.service';
 import { PG_POOL } from '../database/pg-pool.token';
+import { ExplainerService } from '../explainer/explainer.service';
 import { FingerprintService } from '../fingerprint/fingerprint.service';
 import { CreateErrorEventDto } from './create-error-event.dto';
 
@@ -9,6 +11,8 @@ export class IngestService {
   constructor(
     @Inject(PG_POOL) private readonly pool: Pool,
     private readonly fingerprintService: FingerprintService,
+    private readonly explainerService: ExplainerService,
+    private readonly backgroundWork: BackgroundWorkService,
   ) {}
 
   async persistErrorEvent(errorEvent: CreateErrorEventDto): Promise<void> {
@@ -27,6 +31,10 @@ export class IngestService {
       ],
     );
 
-    await this.fingerprintService.registerSighting(errorEvent);
+    const { fingerprint, isNew } = await this.fingerprintService.registerSighting(errorEvent);
+
+    if (isNew) {
+      this.backgroundWork.run(() => this.explainerService.explainNewError(errorEvent, fingerprint));
+    }
   }
 }
