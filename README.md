@@ -18,3 +18,11 @@ Then:
 npm install
 npm test
 ```
+
+## Deploying
+
+Run the deployment wizard to import the project into Vercel, configure its environment variables, and smoke-test the live deployment:
+
+```sh
+./scripts/deploy-setup.sh
+```
