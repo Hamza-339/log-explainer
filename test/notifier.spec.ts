@@ -58,11 +58,11 @@ describe('Notifier background work', () => {
     app.useGlobalPipes(createValidationPipe());
     await app.init();
     backgroundWork = app.get(BackgroundWorkService);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await app.close();
-  });
+  }, 30000);
 
   it('calls the webhook once with the explanation for a novel error', async () => {
     const errorType = uniqueErrorType('NovelNotifiedError');

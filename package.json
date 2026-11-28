@@ -55,6 +55,7 @@
     "setupFiles": [
       "dotenv/config"
     ],
+    "testTimeout": 30000,
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

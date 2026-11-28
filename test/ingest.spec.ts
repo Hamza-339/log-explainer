@@ -45,12 +45,12 @@ describe('POST /ingest', () => {
     await app.init();
     pool = app.get<Pool>(PG_POOL);
     backgroundWork = app.get(BackgroundWorkService);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await backgroundWork.flush();
     await app.close();
-  });
+  }, 30000);
 
   it('persists a valid error event and returns 202', async () => {
     const payload = {

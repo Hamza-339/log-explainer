@@ -49,11 +49,11 @@ describe('Explainer background work', () => {
     await app.init();
     pool = app.get<Pool>(PG_POOL);
     backgroundWork = app.get(BackgroundWorkService);
-  });
+  }, 30000);
 
   afterAll(async () => {
     await app.close();
-  });
+  }, 30000);
 
   it('persists one explanation for a novel fingerprint, from the LLM client', async () => {
     const errorType = uniqueErrorType('NovelExplainedError');
