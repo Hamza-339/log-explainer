@@ -13,6 +13,7 @@ import {
   ExplainerLlmClient,
   ExplainerLlmInput,
 } from '../src/explainer/explainer-llm-client.interface';
+import { NotificationPayload, WEBHOOK_SENDER, WebhookSender } from '../src/notifier/webhook-sender.interface';
 import { BackgroundWorkService } from '../src/background/background-work.service';
 
 const uniqueErrorType = (base: string): string => `${base}_${randomUUID()}`;
@@ -30,6 +31,14 @@ class FakeExplainerLlmClient implements ExplainerLlmClient {
   }
 }
 
+class FakeWebhookSender implements WebhookSender {
+  readonly calls: NotificationPayload[] = [];
+
+  async send(payload: NotificationPayload): Promise<void> {
+    this.calls.push(payload);
+  }
+}
+
 describe('POST /ingest', () => {
   let app: INestApplication;
   let pool: Pool;
@@ -39,6 +48,8 @@ describe('POST /ingest', () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(EXPLAINER_LLM_CLIENT)
       .useValue(new FakeExplainerLlmClient())
+      .overrideProvider(WEBHOOK_SENDER)
+      .useValue(new FakeWebhookSender())
       .compile();
     app = moduleRef.createNestApplication();
     app.useGlobalPipes(createValidationPipe());
